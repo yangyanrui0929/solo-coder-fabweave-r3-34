@@ -259,5 +259,5 @@ def performance_summary(
     steps: list[StepYield],
     expected_steps: list[str],
 ) -> PerformanceSummary:
-    deduplicated = list({step.step: step for step in steps}.values())
-    return PerformanceSummary(takt_result(completions, window_start, window_end), route_yield(deduplicated, expected_steps))
+    yield_value = route_yield(steps, expected_steps)
+    return PerformanceSummary(takt_result(completions, window_start, window_end), yield_value)

@@ -29,8 +29,13 @@ class StepYield:
 
 def route_yield(steps: list[StepYield], expected_steps: list[str]) -> float:
     by_step: dict[str, StepYield] = {}
+    duplicates: list[str] = []
     for step in steps:
+        if step.step in by_step:
+            duplicates.append(step.step)
         by_step[step.step] = step
+    if duplicates:
+        raise ValueError(f"duplicate route step measurements: {sorted(set(duplicates))}")
     missing = [step for step in expected_steps if step not in by_step]
     extra = sorted(set(by_step) - set(expected_steps))
     if missing or extra:
