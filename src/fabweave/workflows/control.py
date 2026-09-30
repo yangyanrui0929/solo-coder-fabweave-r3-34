@@ -24,7 +24,7 @@ from fabweave.rework.authorization import ReworkPolicy, authorization_decision
 from fabweave.shipment.commit import Allocation, CommitLedger
 from fabweave.spc.control import western_electric_rules
 from fabweave.takt.monitor import TaktResult, takt_result
-from fabweave.yielding.rollup import StepYield, route_yield
+from fabweave.yielding.rollup import StepYield, geometric_yield, ordered_route_steps
 
 
 def _combine(decisions: list[Decision], **evidence: object) -> Decision:
@@ -259,5 +259,8 @@ def performance_summary(
     steps: list[StepYield],
     expected_steps: list[str],
 ) -> PerformanceSummary:
-    deduplicated = list({step.step: step for step in steps}.values())
-    return PerformanceSummary(takt_result(completions, window_start, window_end), route_yield(deduplicated, expected_steps))
+    # Validate the route (duplicates, completeness, order) before any rollup
+    # work so dirty input surfaces instead of being silently deduplicated.
+    ordered_steps = ordered_route_steps(steps, expected_steps)
+    takt = takt_result(completions, window_start, window_end)
+    return PerformanceSummary(takt, geometric_yield([step.fraction for step in ordered_steps]))

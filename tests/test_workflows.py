@@ -255,6 +255,17 @@ def test_route_yield_is_ordered_multiplicative_and_complete():
         route_yield(steps[:1], ["A", "B"])
 
 
+def test_route_yield_rejects_duplicate_step_measurements():
+    steps = [StepYield("A", 100, 90), StepYield("A", 100, 80), StepYield("B", 100, 80)]
+    with pytest.raises(ValueError, match="duplicate route step measurements"):
+        route_yield(steps, ["A", "B"])
+
+
+def test_route_yield_rejects_duplicate_expected_route_steps():
+    with pytest.raises(ValueError, match="duplicate route steps"):
+        route_yield([StepYield("A", 100, 90)], ["A", "A"])
+
+
 def test_commit_ledger_is_atomic_idempotent_and_excludes_unavailable_units():
     ledger = CommitLedger(100, safety_units=5)
     ledger.mark_unavailable(pending_scrap=10, quarantine=5)
@@ -344,3 +355,9 @@ def test_dedicated_qualification_combines_both_policy_gates():
 def test_performance_summary_uses_filtered_takt_and_ordered_route_yield():
     summary = performance_summary([0, 10, 20], 5, 20, [StepYield("A", 10, 9), StepYield("B", 9, 8)], ["A", "B"])
     assert summary.takt.takt == 10 and summary.route_yield == pytest.approx(0.8)
+
+
+def test_performance_summary_rejects_duplicate_step_measurements():
+    steps = [StepYield("A", 10, 9), StepYield("A", 10, 8), StepYield("B", 9, 8)]
+    with pytest.raises(ValueError, match="duplicate route step measurements"):
+        performance_summary([0, 10, 20], 5, 20, steps, ["A", "B"])
